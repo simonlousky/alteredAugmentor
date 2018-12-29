@@ -232,8 +232,8 @@ class Pipeline(object):
             r = round(random.uniform(0, 1), 1)
             if r <= operation.probability:
                 # perform ground truth operation with nearest sampling
-                images = operation.perform_operation(images[:0])
-                ground_truth_images = operation.perform_operation(images[0:], resample=Image.NEAREST)
+                images = [operation.perform_operation(images[0])]
+                ground_truth_images = operation.perform_operation(ground_truth_images, resample=Image.NEAREST)
                 images += ground_truth_images
 
         # TEMP FOR TESTING
