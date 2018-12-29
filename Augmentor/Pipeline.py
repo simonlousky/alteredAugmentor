@@ -212,6 +212,7 @@ class Pipeline(object):
         """
 
         images = []
+        ground_truth_images = []
 
         if augmentor_image.image_path is not None:
             images.append(Image.open(augmentor_image.image_path))
@@ -223,14 +224,17 @@ class Pipeline(object):
         if augmentor_image.ground_truth is not None:
             if isinstance(augmentor_image.ground_truth, list):
                 for image in augmentor_image.ground_truth:
-                    images.append(Image.open(image))
+                    ground_truth_images.append(Image.open(image))
             else:
-                images.append(Image.open(augmentor_image.ground_truth))
+                ground_truth_images.append(Image.open(augmentor_image.ground_truth))
 
         for operation in self.operations:
             r = round(random.uniform(0, 1), 1)
             if r <= operation.probability:
-                images = operation.perform_operation(images)
+                # perform ground truth operation with nearest sampling
+                images = operation.perform_operation(images[:1])
+                ground_truth_images = operation.perform_operation(images[1:], resample=Image.NEAREST)
+                images += ground_truth_images
 
         # TEMP FOR TESTING
         # save_to_disk = False
