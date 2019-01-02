@@ -261,7 +261,6 @@ class Pipeline(object):
                                     + file_name \
                                     + "." \
                                     + (self.save_format if self.save_format else augmentor_image.file_format)
-                        images[i].show()
                         images[i].save(os.path.join(augmentor_image.output_directory, save_name))
 
             except IOError as e:

@@ -816,7 +816,7 @@ class RotateRange(Operation):
         elif left_or_right == 1:
             rotation = random_right
 
-        def do(image, resample=Image.BICUBIC):
+        def do(image, resample=Image.NEAREST):
             # Get size before we rotate
             x = image.size[0]
             y = image.size[1]
