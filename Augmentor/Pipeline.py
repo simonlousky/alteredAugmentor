@@ -13,7 +13,7 @@ example images, can be seen in the :ref:`mainfeatures` section.
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
-from PIL.Image import Image
+from PIL import Image
 from builtins import *
 
 from .Operations import *
@@ -212,7 +212,6 @@ class Pipeline(object):
         """
 
         images = []
-        ground_truth_images = []
 
         if augmentor_image.image_path is not None:
             images.append(Image.open(augmentor_image.image_path))
@@ -224,18 +223,15 @@ class Pipeline(object):
         if augmentor_image.ground_truth is not None:
             if isinstance(augmentor_image.ground_truth, list):
                 for image in augmentor_image.ground_truth:
-                    ground_truth_images.append(Image.open(image))
+                    images.append(Image.open(image))
             else:
-                ground_truth_images.append(Image.open(augmentor_image.ground_truth))
+                images.append(Image.open(augmentor_image.ground_truth))
 
         for operation in self.operations:
             r = round(random.uniform(0, 1), 1)
             if r <= operation.probability:
-                # perform ground truth operation with nearest sampling
-                images = [operation.perform_operation(images[0])]
-                ground_truth_images = operation.perform_operation(ground_truth_images, resample=Image.NEAREST)
-                images += ground_truth_images
-
+                images = operation.perform_operation(images)
+                
         # TEMP FOR TESTING
         # save_to_disk = False
 
@@ -265,7 +261,7 @@ class Pipeline(object):
                                     + file_name \
                                     + "." \
                                     + (self.save_format if self.save_format else augmentor_image.file_format)
-
+                        images[i].show()
                         images[i].save(os.path.join(augmentor_image.output_directory, save_name))
 
             except IOError as e:
@@ -392,7 +388,7 @@ class Pipeline(object):
         :return: None
         """
 
-        self.sample(0, multi_threaded=True)
+        self.sample(0, multi_threaded=False)
 
         return None
 
@@ -1658,7 +1654,7 @@ class Pipeline(object):
         else:
             self.add_operation(RandomErasing(probability=probability, rectangle_area=rectangle_area))
 
-    def ground_truth(self, ground_truth_directory):
+    def ground_truth(self, ground_truth_directory, type="png"):
         """
         Specifies a directory containing corresponding images that
         constitute respective ground truth images for the images
@@ -1699,7 +1695,7 @@ class Pipeline(object):
         if len(self.class_labels) == 1:
             for augmentor_image_idx in range(len(self.augmentor_images)):
                 ground_truth_image = os.path.join(ground_truth_directory,
-                                                  self.augmentor_images[augmentor_image_idx].image_file_name)
+                                                  self.augmentor_images[augmentor_image_idx].image_file_name.split(".")[0] + "." + type.lower())
                 if os.path.isfile(ground_truth_image):
                     self.augmentor_images[augmentor_image_idx].ground_truth = ground_truth_image
                     num_of_ground_truth_images_added += 1

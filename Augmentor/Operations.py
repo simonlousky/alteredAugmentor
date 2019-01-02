@@ -73,7 +73,7 @@ class Operation(object):
         """
         return self.__class__.__name__
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Perform the operation on the passed images. Each operation must at least
         have this function, which accepts a list containing objects of type
@@ -104,7 +104,7 @@ class HistogramEqualisation(Operation):
         """
         Operation.__init__(self, probability)
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Performs histogram equalisation on the images passed as an argument
         and returns the equalised images. There are no user definable
@@ -151,7 +151,7 @@ class Greyscale(Operation):
         """
         Operation.__init__(self, probability)
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Converts the passed image to greyscale and returns the transformed
         image. There are no user definable parameters for this method.
@@ -189,7 +189,7 @@ class Invert(Operation):
         """
         Operation.__init__(self, probability)
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Negates the image passed as an argument. There are no user definable
         parameters for this method.
@@ -238,7 +238,7 @@ class BlackAndWhite(Operation):
         Operation.__init__(self, probability)
         self.threshold = threshold
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Convert the image passed as an argument to black and white, 1-bit
         monochrome. Uses the :attr:`threshold` passed to the constructor
@@ -293,7 +293,7 @@ class RandomBrightness(Operation):
         self.min_factor = min_factor
         self.max_factor = max_factor
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Random change the passed image brightness.
 
@@ -344,7 +344,7 @@ class RandomColor(Operation):
         self.min_factor = min_factor
         self.max_factor = max_factor
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Random change the passed image saturation.
 
@@ -395,7 +395,7 @@ class RandomContrast(Operation):
         self.min_factor = min_factor
         self.max_factor = max_factor
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Random change the passed image contrast.
 
@@ -468,7 +468,7 @@ class Skew(Operation):
         self.skew_type = skew_type
         self.magnitude = magnitude
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Perform the skew on the passed image(s) and returns the transformed
         image(s). Uses the :attr:`skew_type` and :attr:`magnitude` parameters
@@ -610,7 +610,7 @@ class Skew(Operation):
         perspective_skew_coefficients_matrix = np.dot(np.linalg.pinv(A), B)
         perspective_skew_coefficients_matrix = np.array(perspective_skew_coefficients_matrix).reshape(8)
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             return image.transform(image.size,
                                    Image.PERSPECTIVE,
                                    perspective_skew_coefficients_matrix,
@@ -618,8 +618,11 @@ class Skew(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -643,7 +646,7 @@ class RotateStandard(Operation):
         self.max_right_rotation = abs(max_right_rotation)  # Ensure always positive
         self.expand = expand
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Documentation to appear.
 
@@ -664,13 +667,16 @@ class RotateStandard(Operation):
         elif left_or_right == 1:
             rotation = random_right
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             return image.rotate(rotation, expand=self.expand, resample=resample)
 
         augmented_images = []
 
         for image in images:
-            augmented_images.append(do(image))
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -707,7 +713,7 @@ class Rotate(Operation):
     def __str__(self):
         return "Rotate " + str(self.rotation)
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Rotate an image by either 90, 180, or 270 degrees, or randomly from
         any of these.
@@ -720,16 +726,20 @@ class Rotate(Operation):
 
         random_factor = random.randint(1, 3)
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             if self.rotation == -1:
-                return image.rotate(90 * random_factor, expand=True)
+                return image.rotate(90 * random_factor, expand=True, resample=resample)
             else:
-                return image.rotate(self.rotation, expand=True)
+                return image.rotate(self.rotation, expand=True, resample=resample)
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
+                 
 
         return augmented_images
 
@@ -779,7 +789,7 @@ class RotateRange(Operation):
         self.max_left_rotation = -abs(max_left_rotation)   # Ensure always negative
         self.max_right_rotation = abs(max_right_rotation)  # Ensure always positive
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Perform the rotation on the passed :attr:`image` and return
         the transformed image. Uses the :attr:`max_left_rotation` and
@@ -806,7 +816,7 @@ class RotateRange(Operation):
         elif left_or_right == 1:
             rotation = random_right
 
-        def do(image):
+        def do(image, resample=Image.BICUBIC):
             # Get size before we rotate
             x = image.size[0]
             y = image.size[1]
@@ -846,8 +856,11 @@ class RotateRange(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -878,7 +891,7 @@ class Resize(Operation):
         self.height = height
         self.resample_filter = resample_filter
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Resize the passed image and returns the resized image. Uses the
         parameters passed to the constructor to resize the passed image.
@@ -927,7 +940,7 @@ class Flip(Operation):
         Operation.__init__(self, probability)
         self.top_bottom_left_right = top_bottom_left_right
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Mirror the image according to the `attr`:top_bottom_left_right`
         argument passed to the constructor and return the mirrored image.
@@ -989,7 +1002,7 @@ class Crop(Operation):
         self.height = height
         self.centre = centre
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Crop an area from an image, either from a random location or centred,
         using the dimensions supplied during instantiation.
@@ -1052,7 +1065,7 @@ class CropPercentage(Operation):
         self.centre = centre
         self.randomise_percentage_area = randomise_percentage_area
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Crop the passed :attr:`images` by percentage area, returning the crop as an
         image.
@@ -1108,7 +1121,7 @@ class CropRandom(Operation):
         Operation.__init__(self, probability)
         self.percentage_area = percentage_area
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, Images):
         """
         Randomly crop the passed image, returning the crop as a new image.
 
@@ -1173,7 +1186,7 @@ class Shear(Operation):
         self.max_shear_left = max_shear_left
         self.max_shear_right = max_shear_right
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Shears the passed image according to the parameters defined during
         instantiation, and returns the sheared image.
@@ -1229,7 +1242,7 @@ class Shear(Operation):
         directions = ["x", "y"]
         direction = random.choice(directions)
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
 
             # We use the angle phi in radians later
             phi = math.tan(math.radians(angle_to_shear))
@@ -1292,8 +1305,11 @@ class Shear(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -1324,7 +1340,7 @@ class Scale(Operation):
         Operation.__init__(self, probability)
         self.scale_factor = scale_factor
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Scale the passed :attr:`images` by the factor specified during
         instantiation, returning the scaled image.
@@ -1335,7 +1351,7 @@ class Scale(Operation):
          PIL.Image.
         """
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             w, h = image.size
 
             new_h = int(h * self.scale_factor)
@@ -1345,8 +1361,11 @@ class Scale(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -1385,7 +1404,7 @@ class Distort(Operation):
         # TODO: Implement non-random magnitude.
         self.randomise_magnitude = True
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, Images):
         """
         Distorts the passed image(s) according to the parameters supplied during
         instantiation, returning the newly distorted image.
@@ -1451,7 +1470,7 @@ class Distort(Operation):
             if i not in last_row and i not in last_column:
                 polygon_indices.append([i, i + 1, i + horizontal_tiles, i + 1 + horizontal_tiles])
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
 
             for a, b, c, d in polygon_indices:
                 dx = random.randint(-self.magnitude, self.magnitude)
@@ -1489,8 +1508,11 @@ class Distort(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -1560,7 +1582,7 @@ class GaussianDistortion(Operation):
         self.sdx = sdx
         self.sdy = sdy
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Distorts the passed image(s) according to the parameters supplied
         during instantiation, returning the newly distorted image.
@@ -1650,7 +1672,7 @@ class GaussianDistortion(Operation):
 
             return res
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
 
             for a, b, c, d in polygon_indices:
                 x1, y1, x2, y2, x3, y3, x4, y4 = polygons[a]
@@ -1689,8 +1711,11 @@ class GaussianDistortion(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -1722,7 +1747,7 @@ class Zoom(Operation):
         self.min_factor = min_factor
         self.max_factor = max_factor
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, Images):
         """
         Zooms/scales the passed image(s) and returns the new image.
 
@@ -1733,7 +1758,7 @@ class Zoom(Operation):
         """
         factor = round(random.uniform(self.min_factor, self.max_factor), 2)
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             w, h = image.size
 
             image_zoomed = image.resize((int(round(image.size[0] * factor)),
@@ -1748,8 +1773,11 @@ class Zoom(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -1779,7 +1807,7 @@ class ZoomRandom(Operation):
         self.percentage_area = percentage_area
         self.randomise = randomise
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Randomly zoom into the passed :attr:`images` by first cropping the image
         based on the :attr:`percentage_area` argument, and then resizing the
@@ -1805,15 +1833,18 @@ class ZoomRandom(Operation):
         random_left_shift = random.randint(0, (w - w_new))  # Note: randint() is from uniform distribution.
         random_down_shift = random.randint(0, (h - h_new))
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             image = image.crop((random_left_shift, random_down_shift, w_new + random_left_shift, h_new + random_down_shift))
 
             return image.resize((w, h), resample=resample)
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC)) 
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
@@ -1830,7 +1861,7 @@ class HSVShifting(Operation):
         self.value_scale = value_scale
         self.value_shift = value_shift
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
 
         def do(image):
             hsv = np.array(image.convert("HSV"), 'float64')
@@ -1881,7 +1912,7 @@ class RandomErasing(Operation):
         Operation.__init__(self, probability)
         self.rectangle_area = rectangle_area
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Adds a random noise rectangle to a random area of the passed image,
         returning the original image with this rectangle superimposed.
@@ -1959,7 +1990,7 @@ class Custom(Operation):
     def __str__(self):
         return "Custom (" + self.custom_function.__name__ + ")"
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Perform the custom operation on the passed image(s), returning the
         transformed image(s).
@@ -1998,7 +2029,7 @@ class ZoomGroundTruth(Operation):
         self.min_factor = min_factor
         self.max_factor = max_factor
 
-    def perform_operation(self, images, resample=Image.BICUBIC):
+    def perform_operation(self, images):
         """
         Zooms/scales the passed images and returns the new images.
 
@@ -2008,7 +2039,7 @@ class ZoomGroundTruth(Operation):
         """
         factor = round(random.uniform(self.min_factor, self.max_factor), 2)
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
 
             w, h = image.size
 
@@ -2023,7 +2054,10 @@ class ZoomGroundTruth(Operation):
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
