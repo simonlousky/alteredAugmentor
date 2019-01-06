@@ -24,7 +24,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from builtins import *
 
-from PIL import Image, ImageOps, ImageEnhance
+from PIL import Image, ImageOps, ImageEnhance, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 import math
 from math import floor, ceil
