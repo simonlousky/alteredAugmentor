@@ -902,14 +902,17 @@ class Resize(Operation):
          PIL.Image.
         """
 
-        def do(image):
+        def do(image, resample=Image.NEAREST):
             # TODO: Automatically change this to ANTIALIAS or BICUBIC depending on the size of the file
-            return image.resize((self.width, self.height), eval("Image.%s" % self.resample_filter))
+            return image.resize((self.width, self.height), resample)
 
         augmented_images = []
 
-        for image in images:
-            augmented_images.append(do(image))
+        for i, image in enumerate(images):
+            if i == 0:
+                augmented_images.append(do(image, resample=Image.BICUBIC))
+            else:
+                augmented_images.append(do(image))
 
         return augmented_images
 
