@@ -1408,7 +1408,7 @@ class Distort(Operation):
         # TODO: Implement non-random magnitude.
         self.randomise_magnitude = True
 
-    def perform_operation(self, Images):
+    def perform_operation(self, images):
         """
         Distorts the passed image(s) according to the parameters supplied during
         instantiation, returning the newly distorted image.

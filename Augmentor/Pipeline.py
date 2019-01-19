@@ -79,6 +79,7 @@ class Pipeline(object):
         self.distinct_dimensions = set()
         self.distinct_formats = set()
         self.save_format = save_format
+        self.ground_truth_format = 'PNG'
         self.operations = []
         self.class_labels = []
         self.process_ground_truth_images = False
@@ -260,7 +261,7 @@ class Pipeline(object):
                                     + "_" \
                                     + file_name \
                                     + "." \
-                                    + (self.save_format if self.save_format else augmentor_image.file_format)
+                                    + (self.ground_truth_format if self.save_format else augmentor_image.file_format)
                         images[i].save(os.path.join(augmentor_image.output_directory, save_name))
 
             except IOError as e:
