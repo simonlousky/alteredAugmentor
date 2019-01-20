@@ -141,7 +141,8 @@ class Pipeline(object):
                 raise IOError("The ground truth source directory you specified does not exist.")
 
         # Get absolute path for output
-        abs_output_directory = os.path.join(source_directory, output_directory)
+        # abs_output_directory = os.path.join(source_directory, output_directory)
+        abs_output_directory = output_directory if os.path.isabs(output_directory) else os.path.join(source_directory, output_directory)
 
         # Scan the directory that user supplied.
         self.augmentor_images, self.class_labels = scan(source_directory, abs_output_directory)
